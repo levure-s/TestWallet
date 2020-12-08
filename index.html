@@ -1,0 +1,101 @@
+<html><body><script src="/socket.io/socket.io.js"></script>
+    <script>
+        window.onload = function () {
+            connectSocket()
+        }
+
+        var socket
+
+        function connectSocket() {
+            socket = io()
+
+            socket.on('notice_wallet', (addr) => {
+                changeAddress(addr)
+                socket.emit('call_info')
+            })
+
+            socket.on('notice_info', (msg) => {
+                updateScreen(JSON.parse(msg))
+            })
+
+            socket.on('notice_tx', (msg) => {
+                showTx(msg)
+                socket.emit('call_info')
+            })
+
+            socket.on('notice_mnemonic', (msg) => {
+                showMnemonic(msg)
+            })
+            
+
+            socket.connect()
+            socket.emit('call_info')
+        }
+
+        function updateScreen(j){
+            document.getElementById("addr").innerHTML = j.addr
+            document.getElementById("balance").innerHTML = j.Balance
+        }
+
+        function changeAddress(addr){
+            document.getElementById("p1result").innerHTML = addr
+        }
+
+        function showTx(tx){
+            document.getElementById("p2result").innerHTML = tx
+        }
+
+        function callCreate(){
+            socket.emit('call_create')
+        }
+
+        function callSend(){
+            var v = {
+                addr: document.getElementById("p2toaddress").value,
+                amount: document.getElementById("p2amount").value
+            }
+            socket.emit('send_coins', JSON.stringify(v));
+        }
+
+        function callMnemonic(){
+            socket.emit('call_mnemonic')
+        }
+
+        function showMnemonic(mnemonic){
+            document.getElementById("p3result").innerHTML = mnemonic
+        }
+
+
+    </script>
+
+    <main>
+        <div class="area_title">
+            <font size="+2">TEST WALLET</font> (Address: <span id="addr"></span>
+            , 残高: <span id="balance"></span>)
+        </div>
+        <hr>
+        <div class = "area_p1">
+            <span id="p1title"><font size="+2">◆Walletを作成する！</font></span><br><br>
+            <input type="button" id="p1button" value="作成" onclick="callCreate();"/>
+            　<font color="red"><span id="p1result"></span></font>
+        </div>
+        <br><hr>
+        <div class = "area_p2">
+            <span id="p2title"><font size="+2">◆送金する！</font></span><br><br>
+            受取人（アドレス）：<input type="text" id="p2toaddress" size="48"/>
+            金額： <input type="text" id="p2amount"/>サトシ<br><br>
+            <input type="button" id="p2button" value="送金" onclick="callSend();"/>
+            　<font color="red"><span id="p2result"></span></font><br><br>
+        </div><br>
+        <br><hr>
+        <div class = "area_p3">
+            <span id="p3title"><font size="+2">◆バックアップ情報を表示する！</font></span><br><br>
+            <input type="button" id="p3button" value="パスフレーズを表示" onclick="callMnemonic();"/>
+            　<font color="red"><span id="p3result"></span></font><br><br>
+        </div>
+
+
+    </main>
+    
+</body>
+</html>
