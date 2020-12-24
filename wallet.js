@@ -5,10 +5,16 @@ const crypto = require('crypto')
 const bitcoinjs = require('bitcoinjs-lib')
 const bip39 = require('bip39')
 const bip32 = require('bip32')
+const { error } = require('console')
 
 function getUtxos (address) {
     return rp('https://testnet-api.smartbit.com.au/v1/blockchain/address/' + address + '/unspent')
       .then(res => JSON.parse(res))
+}
+
+function getUtxos2 (address) {
+  return rp("https://blockchain.info/unspent?active=" + address)
+    .then(res => JSON.parse(res))
 }
 
 function pushTransaction (rawTx) {
@@ -69,6 +75,12 @@ class Wallet{
         return getUtxos(this.getAddress())
           .then(results => {
             this.utxos = results.unspent
+          }).catch(error =>{
+            console.log(error)
+            getUtxos2(this.getAddress())
+            .then(results => {
+              this.utxos = results.unspent_outputs
+            })
           })
     }
 
