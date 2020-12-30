@@ -52,21 +52,21 @@ class Wallet{
         fs.writeFileSync(filePath, jsonBuffer.toString('base64'))
     }
 
-    getAddress() {
+    getAddress(n) {
         this.address = this.address || bitcoinjs.payments.p2pkh({
-          pubkey: this.rootNode.derive(34).publicKey,
+          pubkey: this.rootNode.derivePath("m/44'/0'/0'/0/" + n).publicKey,
           network: this.network
         }).address
         return this.address
     }
 
-    getWIF() {
-        this.wif = this.wif || this.rootNode.derive(34).toWIF()
+    getWIF(n) {
+        this.wif = this.wif || this.rootNode.derivePath("m/44'/0'/0'/0/" + n).toWIF()
         return this.wif
     }
 
-    checkUtxos() {
-        return getUtxos(this.getAddress())
+    checkUtxos(n) {
+        return getUtxos(this.getAddress(n))
           .then(results => {
             this.utxos = results.unspent
           })
@@ -76,11 +76,11 @@ class Wallet{
         return this.utxos || []
     }
 
-    sendCoins(toAddress, amount, fee) {
+    sendCoins(from,toAddress, amount, fee) {
         const self = this
         return co(function*(){
           fee = fee || 100000
-          yield self.checkUtxos()
+          yield self.checkUtxos(from)
           const utxos = self.getUtxos()
           
           const txb = new bitcoinjs.TransactionBuilder(self.network)
@@ -97,12 +97,12 @@ class Wallet{
           
           const MIN_OUTPUT_AMOUNT = 600
           if (amount + fee + MIN_OUTPUT_AMOUNT < inputTotalAmount) {
-            txb.addOutput(self.getAddress(), inputTotalAmount - fee - amount)
+            txb.addOutput(self.getAddress(from), inputTotalAmount - fee - amount)
           }
   
           
           utxos.forEach((_u, i) => {
-            txb.sign(i, self.rootNode.derive(34))
+            txb.sign(i, self.rootNode.derivePath("m/44'/0'/0'/0/" + from))
           })
           
           const tx = txb.build()

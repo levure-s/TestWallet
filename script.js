@@ -23,13 +23,13 @@ async function connectSocket(){
             createWallet(socket)
         })
 
-        socket.on('call_info', () => {
-            getInfo(socket)
+        socket.on('call_info', (msg) => {
+            getInfo(socket,msg)
         })
 
         socket.on('send_coins', (msg) => {
             info = JSON.parse(msg)
-            sendCoins(socket,info.addr,info.amount)
+            sendCoins(socket,info.from,info.addr,info.amount)
         })
 
         socket.on('call_mnemonic', () => {
@@ -41,30 +41,30 @@ async function connectSocket(){
 function createWallet(sock){
     const wallet1 = new Wallet()
     wallet1.toFile("test.wallet")
-    console.log(wallet1.getWIF())
-    console.log(wallet1.getAddress())
-    sock.emit('notice_wallet', wallet1.getAddress())
+    console.log(wallet1.getWIF(0))
+    console.log(wallet1.getAddress(0))
+    sock.emit('notice_wallet', wallet1.getAddress(0))
 }
 
-async function getInfo(sock){
+async function getInfo(sock,n){
     const wallet2 = Wallet.fromFile("test.wallet")
-    await wallet2.checkUtxos()
-    console.log(wallet2.getAddress())
-    const utxos = wallet2.getUtxos()
+    await wallet2.checkUtxos(n)
+    console.log(wallet2.getAddress(n))
+    const utxos = wallet2.getUtxos(n)
     let inputTotalAmount = 0
     utxos.forEach(utxo => {
         inputTotalAmount += utxo.value_int
     })
     var j = {
-        addr:wallet2.getAddress(),
+        addr:wallet2.getAddress(n),
         Balance:inputTotalAmount
     }
     sock.emit('notice_info', JSON.stringify(j))
 }
 
-async function sendCoins(sock,address,amount){
+async function sendCoins(sock,from,address,amount){
     const wallet3 = Wallet.fromFile("test.wallet")
-    const txid = await  wallet3.sendCoins(address,parseInt(amount))
+    const txid = await  wallet3.sendCoins(from,address,parseInt(amount))
     sock.emit('notice_tx', txid)
 }
 

@@ -10,8 +10,8 @@
             socket = io()
 
             socket.on('notice_wallet', (addr) => {
-                changeAddress(addr)
-                socket.emit('call_info')
+                showAddress(addr)
+                socket.emit('call_info',0)
             })
 
             socket.on('notice_info', (msg) => {
@@ -20,7 +20,8 @@
 
             socket.on('notice_tx', (msg) => {
                 showTx(msg)
-                socket.emit('call_info')
+                n = document.getElementById("p1index").value
+                socket.emit('call_info',n)
             })
 
             socket.on('notice_mnemonic', (msg) => {
@@ -29,7 +30,7 @@
             
 
             socket.connect()
-            socket.emit('call_info')
+            socket.emit('call_info',0)
         }
 
         function updateScreen(j){
@@ -37,8 +38,13 @@
             document.getElementById("balance").innerHTML = j.Balance
         }
 
-        function changeAddress(addr){
-            document.getElementById("p1result").innerHTML = addr
+        function showAddress(addr){
+            document.getElementById("p0result").innerHTML = addr
+        }
+
+        function changeAddress(){
+            n = document.getElementById("p1index").value
+            socket.emit('call_info',parseInt(n))
         }
 
         function showTx(tx){
@@ -51,6 +57,7 @@
 
         function callSend(){
             var v = {
+                from: document.getElementById("p1index").value,
                 addr: document.getElementById("p2toaddress").value,
                 amount: document.getElementById("p2amount").value
             }
@@ -74,9 +81,16 @@
             , 残高: <span id="balance"></span>)
         </div>
         <hr>
+        <div class = "area_p0">
+            <span id="p0title"><font size="+2">◆Walletを作成する！</font></span><br><br>
+            <input type="button" id="p0button" value="作成" onclick="callCreate();"/>
+            　<font color="red"><span id="p0result"></span></font>
+        </div>
+        <hr>
         <div class = "area_p1">
-            <span id="p1title"><font size="+2">◆Walletを作成する！</font></span><br><br>
-            <input type="button" id="p1button" value="作成" onclick="callCreate();"/>
+            <span id="p1title"><font size="+2">◆アドレスを切り替える！</font></span><br><br>
+            アドレス（０～１０）：<input type="number" id="p1index" max="10" min="0">
+            <input type="button" id="p1button" value="切替" onclick="changeAddress();"/>
             　<font color="red"><span id="p1result"></span></font>
         </div>
         <br><hr>
