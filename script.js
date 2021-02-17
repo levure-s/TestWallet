@@ -1,4 +1,6 @@
 const Wallet = require("./wallet.js")
+const ETHWallet = require("./ETHwallet")
+const walletETH = new ETHWallet()
 const express = require('express')
 const app = express()
 const http = require('http').Server(app)
@@ -38,13 +40,6 @@ async function connectSocket(){
     })
 }
 
-function createWallet(sock){
-    const wallet1 = new Wallet()
-    wallet1.toFile("test.wallet")
-    console.log(wallet1.getWIF(0))
-    console.log(wallet1.getAddress(0))
-    sock.emit('notice_wallet', wallet1.getAddress(0))
-}
 
 async function getInfo(sock,n){
     const wallet2 = Wallet.fromFile("test.wallet")
@@ -57,15 +52,23 @@ async function getInfo(sock,n){
     })
     var j = {
         addr:wallet2.getAddress(n),
-        Balance:inputTotalAmount
+        Balance:inputTotalAmount,
+        ETHaddr:await walletETH.getAccount(),
+        ETHbalance:await walletETH.getBalance()
     }
     sock.emit('notice_info', JSON.stringify(j))
 }
 
 async function sendCoins(sock,from,address,amount){
     const wallet3 = Wallet.fromFile("test.wallet")
-    const txid = await  wallet3.sendCoins(from,address,parseInt(amount))
-    sock.emit('notice_tx', txid)
+    if(from !== "eth"){
+        const txid = await  wallet3.sendCoins(from,address,parseInt(amount))
+        sock.emit('notice_tx', txid)
+    }else{
+        const txid = await  walletETH.sendCoins(address,parseInt(amount))
+        sock.emit('notice_tx', txid)
+    }
+    
 }
 
 function getMnemonic(sock){

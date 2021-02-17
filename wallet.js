@@ -26,7 +26,7 @@ function pushTransaction (rawTx) {
 class Wallet{
     constructor(seed, network) {
         this.entropy = crypto.randomBytes(16)
-        this.mnemonicPhrase = bip39.entropyToMnemonic(this.entropy)
+        this.mnemonicPhrase = "payment festival describe bird jaguar cram artwork flower video window undo join"
         this.seed = seed || bip39.mnemonicToSeed(this.mnemonicPhrase)
         this.network = network || bitcoinjs.networks.testnet
         this.rootNode = bip32.fromSeed(this.seed,this.network)
